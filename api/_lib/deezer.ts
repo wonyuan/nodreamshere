@@ -16,15 +16,21 @@ type DzTrack = {
 type DzArtist = { id: number; name: string; nb_fan: number; picture_medium?: string };
 type DzPlaylist = { id: number; title: string; nb_tracks: number };
 
-async function dz<T>(path: string): Promise<T | null> {
+// Deezer limits requests per IP address, and Vercel's servers share their addresses with many
+// other sites, so a refusal ("Quota limit exceeded") is retried once after a short pause. Every
+// failure is logged, so it shows up in the Vercel logs instead of looking like "no results".
+async function dz<T>(path: string, retry = true): Promise<T | null> {
   try {
     const res = await fetch(DEEZER + path, { signal: AbortSignal.timeout(8000) });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json?.error ? null : (json as T);
-  } catch {
-    return null;
+    const json = res.ok ? await res.json() : null;
+    if (res.ok && !json?.error) return json as T;
+    console.warn("deezer refused", path, res.status, JSON.stringify(json?.error ?? null));
+  } catch (err) {
+    console.warn("deezer failed", path, String(err));
   }
+  if (!retry) return null;
+  await new Promise((r) => setTimeout(r, 400));
+  return dz<T>(path, false);
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -93,12 +99,12 @@ export async function findSeed(query: string): Promise<Seed | null> {
 }
 
 // Live matches while typing: well-known artists and individual songs.
-export async function suggest(query: string): Promise<Suggestions> {
+export async function suggest(query: string): Promise<Suggestions | null> {
   const q = encodeURIComponent(query);
-  const [artists, songs] = await Promise.all([
-    dz<{ data: DzArtist[] }>(`/search/artist?q=${q}&limit=5`),
-    dz<{ data: DzTrack[] }>(`/search/track?q=${q}&limit=6`),
-  ]);
+  // One after the other: two calls at the same instant are likelier to hit Deezer's limit.
+  const artists = await dz<{ data: DzArtist[] }>(`/search/artist?q=${q}&limit=5`);
+  const songs = await dz<{ data: DzTrack[] }>(`/search/track?q=${q}&limit=6`);
+  if (!artists && !songs) return null;
   const seen = new Set<string>();
   return {
     // Small artists only when their name is exactly what was typed (OHHYUK has under 1,000

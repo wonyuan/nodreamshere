@@ -1,4 +1,4 @@
-import type { Poem, PoemRequest, Seed, SongReading, Suggestions, Track } from "./types";
+import type { Album, Poem, PoemRequest, Seed, SongReading, Suggestions, Track } from "./types";
 
 async function call<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -13,9 +13,9 @@ const post = (body: unknown): RequestInit => ({
   body: JSON.stringify(body),
 });
 
-export async function fetchCovers(): Promise<string[]> {
+export async function fetchCovers(): Promise<Album[]> {
   try {
-    return (await call<{ covers: string[] }>("/api/covers")).covers;
+    return (await call<{ albums: Album[] }>("/api/covers")).albums;
   } catch {
     return [];
   }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { GoHome } from "./components/Stage";
 import { Title, Spinning } from "./screens/Title";
 import { Intro } from "./screens/Intro";
@@ -8,7 +8,7 @@ import { Result } from "./screens/Result";
 import { fetchCovers, readSongs, writePoem } from "./lib/api";
 import { handleCallback, isCallback, SpotifyAuthError, topTracks, type TimeRange } from "./lib/spotify";
 import { previewScreen, samplePoem, sampleTracks } from "./lib/preview";
-import type { Poem, Seed, SongReading, Track } from "./lib/types";
+import type { Album, Poem, Seed, SongReading, Track } from "./lib/types";
 
 type Screen = "title" | "intro" | "seeds" | "connecting" | "pick" | "writing" | "poem";
 
@@ -60,7 +60,8 @@ function seedLabels(seeds: Seed[]): string[] {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>((previewScreen as Screen) ?? (isCallback() ? "connecting" : "title"));
-  const [covers, setCovers] = useState<string[]>([]);
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const covers = useMemo(() => albums.map((a) => a.cover), [albums]);
   const [seeds, setSeeds] = useState<Seed[]>([]);
   const [tracks, setTracks] = useState<Track[]>([]);
   const [poem, setPoem] = useState<Poem | null>(null);
@@ -71,10 +72,10 @@ export default function App() {
   const written = useRef<{ key: string; poems: string[] }>({ key: "", poems: [] });
 
   useEffect(() => {
-    fetchCovers().then((c) => {
-      setCovers(c.sort(() => Math.random() - 0.5));
+    fetchCovers().then((a) => {
+      setAlbums(a.sort(() => Math.random() - 0.5));
       if (previewScreen) {
-        const sample = sampleTracks(c);
+        const sample = sampleTracks(a.map((x) => x.cover));
         setTracks(sample.slice(0, 9));
         setPoem(samplePoem(sample));
       }
@@ -142,7 +143,7 @@ export default function App() {
   function view() {
     switch (screen) {
       case "title":
-        return <Title covers={covers} onStart={() => go("intro")} />;
+        return <Title albums={albums} onStart={() => go("intro")} />;
       case "intro":
         return <Intro onSeeds={() => go("seeds")} error={error} />;
       case "seeds":
@@ -156,7 +157,7 @@ export default function App() {
           />
         );
       case "connecting":
-        return <Spinning covers={covers} messages={["connecting…"]} />;
+        return <Spinning albums={albums} messages={["connecting…"]} />;
       case "pick":
         return (
           <Pick
@@ -168,7 +169,10 @@ export default function App() {
           />
         );
       case "writing":
-        return <Spinning covers={tracks.map((t) => t.albumArt)} messages={WRITING_MESSAGES} />;
+        return <Spinning
+            albums={tracks.flatMap((t) => (t.albumArt ? [{ cover: t.albumArt, title: t.album, artist: t.artists[0] }] : []))}
+            messages={WRITING_MESSAGES}
+          />;
       case "poem":
         return (
           poem && <Result poem={poem} onAgain={() => generate(tracks)} onRestart={() => go(seeds.length ? "seeds" : "pick")} />

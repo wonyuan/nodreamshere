@@ -20,7 +20,7 @@ export function Stage({
   return (
     <div className="stage">
       <header className="app-title">
-        <button className="logo" onClick={goHome} aria-label="give me prose — back to the start">
+        <button className="logo" onClick={goHome} aria-label="nothing here; back to the start">
           <img src="/logo.png" alt="" />
         </button>
       </header>

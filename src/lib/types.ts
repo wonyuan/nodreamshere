@@ -1,3 +1,6 @@
+// An album on the title reel, with what its thought bubble says on hover.
+export type Album = { cover: string; title: string; artist: string };
+
 export type Track = {
   id: string;
   name: string;

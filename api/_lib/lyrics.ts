@@ -4,7 +4,7 @@ import type { Track } from "../../src/lib/types";
 // interpretation; they are never sent back to the browser.
 
 const LRCLIB = "https://lrclib.net/api";
-const HEADERS = { "User-Agent": "givemeprose v0.1" };
+const HEADERS = { "User-Agent": "nothinghere v0.1" };
 // The whole song, so the reader sees how it turns and ends (bridges and outros often carry
 // the meaning). Capped only to stay clear of runaway entries.
 const EXCERPT_CHARS = 5000;

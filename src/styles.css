@@ -385,6 +385,117 @@ button {
   animation-duration: 3s;
 }
 
+/* Hovering an album stops the reel so its thought bubble stays put. */
+.reel--paused {
+  animation-play-state: paused;
+}
+
+.reel-window {
+  cursor: pointer;
+}
+
+/* ---------- the reel's thought bubbles ----------
+   A cartoon thought cloud and two beads trailing back to the album, all in the buttons' milky
+   frosted glass. Every cloud is the same size; long names are cut short with an ellipsis. The
+   cloud grows outward from the reel: --dx/--dy point away from its middle. */
+
+.thought {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.thought-puff,
+.thought-cloud {
+  position: absolute;
+  animation: puff 0.28s cubic-bezier(0.3, 1.4, 0.5, 1) var(--delay, 0ms) backwards;
+}
+
+/* Exactly a .card .pill, made round. */
+.thought-puff {
+  border-radius: 50%;
+  translate: -50% -50%;
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: var(--glass-light);
+  -webkit-backdrop-filter: var(--frost-blur);
+  backdrop-filter: var(--frost-blur);
+  box-shadow:
+    inset 0 1px 0 #fff,
+    inset 0 -1px 0 rgba(60, 50, 30, 0.08),
+    0 4px 12px rgba(60, 50, 30, 0.18);
+}
+
+.thought-cloud {
+  --delay: 150ms;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(0.8 * var(--u));
+  width: calc(50 * var(--u));
+  height: calc(31 * var(--u));
+  margin: 0;
+  /* The words stay well inside the bumps. */
+  padding: 0 calc(9 * var(--u));
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: calc(3.4 * var(--u));
+  line-height: 1.25;
+  text-align: center;
+  translate: calc((var(--dx) - 1) * 50%) calc((var(--dy) - 1) * 50%);
+}
+
+.thought-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.thought-shadow,
+.thought-glass,
+.thought-rim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.thought-shadow {
+  translate: 0 calc(1 * var(--u));
+}
+
+.thought-glass {
+  clip-path: url(#cloud-clip);
+  background: var(--glass-light);
+  -webkit-backdrop-filter: var(--frost-blur);
+  backdrop-filter: var(--frost-blur);
+}
+
+.thought-title,
+.thought-artist {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.thought-title {
+  font-weight: 700;
+}
+
+.thought-artist {
+  font-size: 0.88em;
+  opacity: 0.65;
+}
+
+@keyframes puff {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
 @keyframes spin {
   from {
     transform: rotate(-1.25deg);
@@ -1202,6 +1313,10 @@ p.reel-button {
     animation: none;
   }
   .reel {
+    animation: none;
+  }
+  .thought-puff,
+  .thought-cloud {
     animation: none;
   }
   .scrap,

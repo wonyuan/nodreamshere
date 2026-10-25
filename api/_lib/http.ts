@@ -1,5 +1,5 @@
 import type { Track } from "../../src/lib/types";
-import { LlmError } from "./llm";
+import { LlmError } from "./llm.js";
 
 export const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...headers } });

@@ -1,5 +1,5 @@
-import { json, llmFailure, parseTracks, rateLimited, tooMany } from "./_lib/http";
-import { readSongs } from "./_lib/reading";
+import { json, llmFailure, parseTracks, rateLimited, tooMany } from "./_lib/http.js";
+import { readSongs } from "./_lib/reading.js";
 
 // POST /api/read  { tracks }  →  { readings }
 // Called as soon as someone settles on their nine songs, so the slow reading step is done

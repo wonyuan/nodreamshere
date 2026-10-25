@@ -1,7 +1,7 @@
 import type { Poem, PoemRequest, SongReading } from "../src/lib/types";
-import { completeJson } from "./_lib/llm";
-import { json, llmFailure, parseTracks, rateLimited, tooMany } from "./_lib/http";
-import { readSongs } from "./_lib/reading";
+import { completeJson } from "./_lib/llm.js";
+import { json, llmFailure, parseTracks, rateLimited, tooMany } from "./_lib/http.js";
+import { readSongs } from "./_lib/reading.js";
 
 // Cohere can be slow on a bad day; let Vercel wait for it.
 export const maxDuration = 300;

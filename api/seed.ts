@@ -1,5 +1,5 @@
-import { artistSeed, findSeed, genreSongs } from "./_lib/deezer";
-import { json, rateLimited, tooMany } from "./_lib/http";
+import { artistSeed, findSeed, genreSongs } from "./_lib/deezer.js";
+import { json, rateLimited, tooMany } from "./_lib/http.js";
 
 // GET /api/seed?artist=11573699  — a suggested artist's top songs
 // GET /api/seed?genre=bedroom pop — songs from a playlist of that genre

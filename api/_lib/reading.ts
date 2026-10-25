@@ -1,6 +1,6 @@
 import type { SongReading, Track } from "../../src/lib/types";
-import { fetchLyrics } from "./lyrics";
-import { completeJson } from "./llm";
+import { fetchLyrics } from "./lyrics.js";
+import { completeJson } from "./llm.js";
 
 // The slow part of making a poem: reading each song's full lyrics and working out what it is
 // really about. Each song gets its own call (in parallel), so none is skimmed, and uses the

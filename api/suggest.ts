@@ -1,5 +1,5 @@
-import { suggest } from "./_lib/deezer";
-import { json, rateLimited, tooMany } from "./_lib/http";
+import { suggest } from "./_lib/deezer.js";
+import { json, rateLimited, tooMany } from "./_lib/http.js";
 
 // GET /api/suggest?q=white flag  →  { artists: [...], songs: [...] }, while someone types.
 export async function GET(req: Request): Promise<Response> {

@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { Stage } from "../components/Stage";
 
 // Frame 3: a collage of real paper stickers — Post-its, torn scraps, tickets, a fortune
@@ -16,8 +16,9 @@ type Sticker = {
   rot: number;
 };
 
-// How long the pile takes to fall away before the next screen shows.
-const LEAVE_MS = 950;
+// The next screen shows once every sticker has fallen; this is only a backstop in case the
+// browser skips the animations (a background tab, say).
+const LEAVE_FALLBACK_MS = 2000;
 
 const s = (name: string) => `/stickers/${name}.png`;
 
@@ -67,8 +68,14 @@ export function Intro({ onSeeds, error }: { onSeeds: () => void; error?: string 
   const leave = () => {
     if (leaving) return;
     setLeaving(true);
-    window.setTimeout(onSeeds, LEAVE_MS);
   };
+
+  useEffect(() => {
+    if (!leaving) return;
+    if (gone.size === STICKERS.length) return onSeeds();
+    const t = window.setTimeout(onSeeds, LEAVE_FALLBACK_MS);
+    return () => window.clearTimeout(t);
+  }, [leaving, gone, onSeeds]);
 
   return (
     <Stage className="card--intro" aside={error ? <p>{error}</p> : null}>
@@ -102,7 +109,9 @@ export function Intro({ onSeeds, error }: { onSeeds: () => void; error?: string 
                 // Landing order jumps around the card rather than going top to bottom.
                 "--land-delay": `${((i * 11) % STICKERS.length) * 35}ms`,
                 // A clicked sticker goes at once; on the way out they go in a quick scatter.
-                "--fall-delay": leaving && !falling.has(i) ? `${(i * 7) % 6 * 40}ms` : "0ms",
+                "--fall-delay": leaving && !falling.has(i) ? `${((i * 7) % 6) * 30}ms` : "0ms",
+                // On the way out the whole pile drops faster than a single clicked sticker.
+                "--fall-dur": leaving && !falling.has(i) ? "0.8s" : "1.1s",
               } as CSSProperties
             }
             onClick={() => drop(i)}

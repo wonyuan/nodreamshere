@@ -30,6 +30,8 @@ async function dz<T>(path: string): Promise<T | null> {
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 // How alike two names are, 0–1, by edit distance — so "phobe bridgers" still finds Phoebe Bridgers.
+const exactName = (a: string, b: string) => norm(a) === norm(b);
+
 function similarity(a: string, b: string): number {
   const x = norm(a);
   const y = norm(b);
@@ -84,7 +86,7 @@ export async function genreSongs(query: string): Promise<Seed | null> {
 // closest artist. Tiny artists that happen to share a genre's name ("Midwest Emo") are skipped.
 export async function findSeed(query: string): Promise<Seed | null> {
   const artists = (await dz<{ data: DzArtist[] }>(`/search/artist?q=${encodeURIComponent(query)}&limit=5`))?.data ?? [];
-  const named = artists.find((a) => a.nb_fan >= 1000 && similarity(a.name, query) >= 0.8);
+  const named = artists.find((a) => similarity(a.name, query) >= 0.8 && (a.nb_fan >= 1000 || exactName(a.name, query)));
   const asArtist = named ? await artistSongs(named) : null;
   if (asArtist) return asArtist;
   return (await genreSongs(query)) ?? (artists[0] ? artistSongs(artists[0]) : null);
@@ -99,8 +101,13 @@ export async function suggest(query: string): Promise<Suggestions> {
   ]);
   const seen = new Set<string>();
   return {
+    // Small artists only when their name is exactly what was typed (OHHYUK has under 1,000
+    // fans on Deezer), so lookalike names with a handful of fans don't crowd the list.
     artists: (artists?.data ?? [])
-      .filter((a) => a.nb_fan >= 1000)
+      .filter((a) => a.nb_fan >= 1000 || exactName(a.name, query))
+      .sort((a, b) => Number(exactName(b.name, query)) - Number(exactName(a.name, query)) || b.nb_fan - a.nb_fan)
+      // One per name: the best-known of several accounts called the same thing.
+      .filter((a, i, all) => all.findIndex((b) => norm(b.name) === norm(a.name)) === i)
       .slice(0, 2)
       .map((a) => ({ id: a.id, name: a.name, image: a.picture_medium ?? null })),
     songs: (songs?.data ?? [])

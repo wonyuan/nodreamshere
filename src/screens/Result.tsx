@@ -71,6 +71,7 @@ export function Result({
 
   return (
     <Stage
+      className="card--poem"
       left={
         <div className={`result-notes ${done ? "result-notes--in" : ""}`}>
           <div className="result-actions">

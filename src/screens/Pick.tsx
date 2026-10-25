@@ -1,33 +1,26 @@
 import { useEffect, useState } from "react";
 import { Stage } from "../components/Stage";
-import { RANGE_LABELS, type TimeRange } from "../lib/spotify";
 import type { Track } from "../lib/types";
 
-// Frame 4: a captcha of the listener's songs — their Spotify top tracks, or songs from the
-// artists and genres they named. Like a real image captcha, a clicked square gets ticked,
+// Frame 4: a captcha of songs from the artists, genres and songs the listener named. Like a real image captcha, a clicked square gets ticked,
 // fades, and is replaced by the next track in line.
 
-const RANGES: TimeRange[] = ["medium_term", "short_term", "long_term"];
 const SLOTS = 9;
 
 type Board = { slots: (Track | null)[]; queue: Track[] };
 
 export function Pick({
   load,
-  seedLabels,
   onDone,
   onError,
   error,
 }: {
-  load: (range: TimeRange) => Promise<Track[]>;
-  // Set when the songs come from named artists/genres rather than Spotify.
-  seedLabels?: string[];
+  load: () => Promise<Track[]>;
   onDone: (tracks: Track[]) => void;
   onError: (err: unknown) => void;
   error?: string | null;
 }) {
-  const [range, setRange] = useState<TimeRange>("medium_term");
-  // Bumped by ↻ in seeds mode to deal a fresh shuffle.
+  // Bumped by ↻ to deal a fresh shuffle.
   const [round, setRound] = useState(0);
   const [board, setBoard] = useState<Board | null>(null);
   const [ticking, setTicking] = useState<Set<number>>(new Set());
@@ -36,7 +29,7 @@ export function Pick({
   useEffect(() => {
     let live = true;
     setBoard(null);
-    load(range)
+    load()
       .then((tracks) => {
         if (!live) return;
         const slots: (Track | null)[] = tracks.slice(0, SLOTS);
@@ -47,7 +40,7 @@ export function Pick({
     return () => {
       live = false;
     };
-  }, [range, round, load, onError]);
+  }, [round, load, onError]);
 
   const reject = (i: number) => {
     if (ticking.has(i)) return;
@@ -68,7 +61,6 @@ export function Pick({
   };
 
   const chosen = board?.slots.filter((t): t is Track => t !== null) ?? [];
-  const nextRange = RANGES[(RANGES.indexOf(range) + 1) % RANGES.length];
 
   return (
     <Stage
@@ -108,9 +100,9 @@ export function Pick({
         <div className="captcha-foot">
           <button
             className="icon-pill icon-pill--small"
-            onClick={() => (seedLabels ? setRound((r) => r + 1) : setRange(nextRange))}
-            aria-label={seedLabels ? "shuffle in different songs" : `switch to your ${RANGE_LABELS[nextRange]}`}
-            data-label={seedLabels ? "shuffle" : RANGE_LABELS[nextRange]}
+            onClick={() => setRound((r) => r + 1)}
+            aria-label="shuffle in different songs"
+            data-label="shuffle"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
               <path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" />
@@ -128,15 +120,13 @@ export function Pick({
               <path d="M12 11v6M12 7.5v.01" />
             </svg>
           </button>
-          {!seedLabels && <span className="captcha-range">{RANGE_LABELS[range]}</span>}
           <button className="pill captcha-go" disabled={chosen.length === 0} onClick={() => onDone(chosen)}>
             i'm good →
           </button>
           {showInfo && (
             <p className="captcha-info" onClick={() => setShowInfo(false)}>
-              {seedLabels
-                ? "these are songs from the artists and genres you named. remove the ones that don't represent you; ↻ deals a fresh shuffle."
-                : "these are your most-played songs on spotify. remove the ones that don't represent you; ↻ switches between the last 4 weeks, 6 months and year."}
+              these are songs from the artists and genres you named. remove the ones that don't represent
+              you; ↻ deals a fresh shuffle.
             </p>
           )}
         </div>

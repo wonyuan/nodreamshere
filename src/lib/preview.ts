@@ -1,7 +1,7 @@
 import type { Poem, Track } from "./types";
 
 // Dev-only: open http://127.0.0.1:5173/?preview=intro|seeds|pick|writing|poem to look at
-// any screen with sample data, without signing in to Spotify or spending LLM calls.
+// any screen with sample data, without searching or spending LLM calls.
 
 export const previewScreen = import.meta.env.DEV ? new URLSearchParams(window.location.search).get("preview") : null;
 

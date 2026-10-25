@@ -6,11 +6,10 @@ import { Seeds } from "./screens/Seeds";
 import { Pick } from "./screens/Pick";
 import { Result } from "./screens/Result";
 import { fetchCovers, readSongs, writePoem } from "./lib/api";
-import { handleCallback, isCallback, SpotifyAuthError, topTracks, type TimeRange } from "./lib/spotify";
 import { previewScreen, samplePoem, sampleTracks } from "./lib/preview";
 import type { Album, Poem, Seed, SongReading, Track } from "./lib/types";
 
-type Screen = "title" | "intro" | "seeds" | "connecting" | "pick" | "writing" | "poem";
+type Screen = "title" | "intro" | "seeds" | "pick" | "writing" | "poem";
 
 const WRITING_MESSAGES = [
   "listening closely…",
@@ -51,15 +50,8 @@ function mixSeeds(seeds: Seed[]): Track[] {
   return out;
 }
 
-// "clairo, bedroom pop, plus 1 song you picked" for the captcha's side note.
-function seedLabels(seeds: Seed[]): string[] {
-  const broad = seeds.filter((s) => s.kind !== "song").map((s) => s.label);
-  const songs = seeds.length - broad.length;
-  return songs ? [...broad, `${broad.length ? "plus " : ""}${songs} song${songs > 1 ? "s" : ""} you picked`] : broad;
-}
-
 export default function App() {
-  const [screen, setScreen] = useState<Screen>((previewScreen as Screen) ?? (isCallback() ? "connecting" : "title"));
+  const [screen, setScreen] = useState<Screen>((previewScreen as Screen) ?? "title");
   const [albums, setAlbums] = useState<Album[]>([]);
   const covers = useMemo(() => albums.map((a) => a.cover), [albums]);
   const [seeds, setSeeds] = useState<Seed[]>([]);
@@ -80,14 +72,6 @@ export default function App() {
         setPoem(samplePoem(sample));
       }
     });
-    if (isCallback()) {
-      handleCallback()
-        .then(() => setScreen("pick"))
-        .catch((err) => {
-          setError(message(err));
-          setScreen("intro");
-        });
-    }
   }, []);
 
   const go = (next: Screen) => {
@@ -95,18 +79,10 @@ export default function App() {
     setScreen(next);
   };
 
-  const onError = useCallback((err: unknown) => {
-    setError(message(err));
-    if (err instanceof SpotifyAuthError) setScreen("intro");
-  }, []);
+  const onError = useCallback((err: unknown) => setError(message(err)), []);
 
   const loadTracks = useCallback(
-    (range: TimeRange) =>
-      seeds.length
-        ? Promise.resolve(mixSeeds(seeds))
-        : previewScreen
-          ? Promise.resolve(sampleTracks(covers))
-          : topTracks(range),
+    () => Promise.resolve(seeds.length || !previewScreen ? mixSeeds(seeds) : sampleTracks(covers)),
     // Only preview mode needs covers; real songs shouldn't reload when they arrive.
     [previewScreen ? covers : null, seeds],
   );
@@ -156,13 +132,10 @@ export default function App() {
             }}
           />
         );
-      case "connecting":
-        return <Spinning albums={albums} messages={["connecting…"]} />;
       case "pick":
         return (
           <Pick
             load={loadTracks}
-            seedLabels={seeds.length ? seedLabels(seeds) : undefined}
             onError={onError}
             error={error}
             onDone={chooseSongs}

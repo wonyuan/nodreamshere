@@ -36,17 +36,23 @@ html {
   cursor: url("/Cross.cur") 11 11, crosshair;
 }
 
-/* Opera flickers with any custom cursor file, so it gets the built-in crosshair (main.tsx). */
-html.opera {
-  cursor: crosshair;
-}
-
 html *,
 html *::before,
 html *::after {
   cursor: inherit !important;
 }
 
+/* Click-and-drag highlights words only: images, the reel, stickers, covers and buttons never
+   get the selection tint. */
+img,
+svg,
+button,
+.reel,
+.reel-shadow,
+.tile {
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 /* Nothing here is meant to be dragged. Without this, the wobble of a click on a cover, logo or
    link starts a native drag, which swaps in the system cursor. */
@@ -55,25 +61,6 @@ a,
 image {
   -webkit-user-drag: none;
   user-drag: none;
-}
-
-p,
-li,
-input,
-textarea,
-.typewriter-paper {
-}
-
-a,
-a *,
-button,
-button *,
-[role="option"],
-[role="option"] * {
-}
-
-button:disabled,
-button:disabled * {
 }
 
 html,
@@ -121,8 +108,7 @@ body::before {
   mask-image: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0.25) 20%, rgba(0, 0, 0, 0.6) 60%, #000 95%);
 }
 
-/* Still film grain, kept light. It used to flicker, but the constant repaint made the cursor
-   flash back to the system one. */
+/* Still film grain, kept light. */
 body::after {
   inset: 0;
   background: url("/textures/grain.png") 0 0 / 300px 300px;
@@ -446,9 +432,6 @@ button {
   animation-play-state: paused;
 }
 
-.reel-window {
-}
-
 /* The note beside the card naming the album you're hovering on the reel: the same glass
    pane as the haiku's "why" note. */
 .album-note {
@@ -487,7 +470,6 @@ button {
   font-style: normal;
   opacity: 0.75;
 }
-
 
 @keyframes spin {
   from {
@@ -1034,10 +1016,6 @@ p.reel-button {
   height: 36px;
 }
 
-.captcha-range {
-  font-size: calc(3 * var(--u));
-  opacity: 0.55;
-}
 
 .captcha-go {
   margin-left: auto;
@@ -1064,12 +1042,18 @@ p.reel-button {
 
 /* ---------- frame 2: typewriter ---------- */
 
+/* The image has a little empty space under the machine, so it sits slightly below the card's
+   bottom edge to put the base right on it; the card clips it to its rounded corners. */
 .typewriter {
   position: absolute;
   left: calc(12 * var(--u));
-  top: calc(-1 * var(--u));
+  top: calc(1.2 * var(--u));
   width: calc(125.13 * var(--u));
   height: calc(181.39 * var(--u));
+}
+
+.card--poem {
+  overflow: hidden;
 }
 
 .typewriter img {
@@ -1203,10 +1187,6 @@ p.reel-button {
   opacity: 0.7;
 }
 
-.result-small {
-  font-weight: 400;
-  font-size: 0.85em;
-}
 
 .result-actions {
   display: flex;
@@ -1323,17 +1303,3 @@ p.reel-button {
   }
 }
 
-/* Dev-only switches (see main.tsx) for tracking down the cursor flicker. */
-html.debug-nofrost *,
-html.debug-nofrost *::before,
-html.debug-nofrost *::after {
-  -webkit-backdrop-filter: none !important;
-  backdrop-filter: none !important;
-}
-
-html.debug-still *,
-html.debug-still *::before,
-html.debug-still *::after {
-  animation: none !important;
-  transition: none !important;
-}

@@ -45,7 +45,6 @@ export default defineConfig(({ mode }) => {
   Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
   return {
     plugins: [react(), apiRoutes()],
-    // Spotify no longer accepts "localhost" redirect URIs, only 127.0.0.1.
     server: { host: "127.0.0.1", port: 5173, strictPort: true },
   };
 });
